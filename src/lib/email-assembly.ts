@@ -5,7 +5,10 @@
 // true for triage mode, where a human tapped a reason per candidate (see
 // brief §0, §6b, Appendix B).
 
-function singleOpening(
+// Exported so the generate form's live preview (which shows this line
+// updating before the AI middle exists) can stay in sync with the real
+// assembly logic below, instead of re-deriving it separately.
+export function singleOpening(
   stage: string,
   roleTitle: string,
   companyName: string,
