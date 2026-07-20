@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "./sign-out-button";
@@ -42,6 +43,12 @@ export default async function DashboardPage() {
         <p className="mt-2 text-sm text-ink-muted">
           Signed in as {membership.display_name} · {membership.role}
         </p>
+        <Link
+          href="/vacancies"
+          className="mt-4 inline-block text-sm font-semibold text-accent-dark hover:underline"
+        >
+          Vacancies →
+        </Link>
       </div>
     </main>
   );
