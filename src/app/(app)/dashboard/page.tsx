@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "./sign-out-button";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -34,21 +32,12 @@ export default async function DashboardPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-white p-6">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-ink">
-            {company?.name ?? "Your company"}
-          </h1>
-          <SignOutButton />
-        </div>
+        <h1 className="text-2xl font-bold text-ink">
+          {company?.name ?? "Your company"}
+        </h1>
         <p className="mt-2 text-sm text-ink-muted">
           Signed in as {membership.display_name} · {membership.role}
         </p>
-        <Link
-          href="/vacancies"
-          className="mt-4 inline-block text-sm font-semibold text-accent-dark hover:underline"
-        >
-          Vacancies →
-        </Link>
       </div>
     </main>
   );

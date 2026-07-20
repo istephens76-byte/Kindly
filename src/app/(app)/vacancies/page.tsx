@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewVacancyForm } from "./new-vacancy-form";
@@ -16,7 +15,7 @@ export default async function VacanciesPage() {
 
   const { data: member } = await supabase
     .from("users")
-    .select("company_id, role")
+    .select("company_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -39,15 +38,7 @@ export default async function VacanciesPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-ink">Vacancies</h1>
-        <Link
-          href={member.role === "admin" ? "/admin" : "/dashboard"}
-          className="text-sm font-semibold text-accent-dark hover:underline"
-        >
-          {member.role === "admin" ? "Template Studio" : "Dashboard"} →
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold text-ink">Vacancies</h1>
 
       <section className="rounded-2xl border border-border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold text-ink">New vacancy</h2>
