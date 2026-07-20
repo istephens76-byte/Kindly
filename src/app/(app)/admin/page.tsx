@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./profile-form";
@@ -65,15 +64,7 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-ink">Template Studio</h1>
-        <Link
-          href="/vacancies"
-          className="text-sm font-semibold text-accent-dark hover:underline"
-        >
-          Vacancies →
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold text-ink">Template Studio</h1>
 
       <section className="rounded-2xl border border-border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold text-ink">
