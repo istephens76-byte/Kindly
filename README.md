@@ -21,6 +21,7 @@ for the phase plan.
    filename order**:
    - `20260719000001_init_companies_users.sql`
    - `20260719000002_rls_companies_users.sql`
+   - `20260720000001_init_profiles_shells_taxonomies.sql`
 
    (Or, if you have the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started)
    installed and linked to the project: `supabase db push`.)
