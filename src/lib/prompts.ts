@@ -54,3 +54,26 @@ RULES: UK English. No "unfortunately", "we regret", "after careful consideration
 
 Respond ONLY with JSON, no markdown fences: {"warm_line": "...", "closing_active": "...", "closing_other": "...", "closing_no": "...", "talent_line": "..."}`;
 }
+
+// Parses the model's JSON response for buildExtractSkillsPrompt. Tolerates
+// 3-8 entries even though the prompt asks for 5-6, since models sometimes
+// drift by one or two.
+export const extractSkillsSchema = z
+  .array(z.string().trim().min(1).max(60))
+  .min(3)
+  .max(8);
+
+export type ExtractSkillsOutput = z.infer<typeof extractSkillsSchema>;
+
+// Ported from extractSkills() in kindly-prototype-v4.jsx. Extracts 5-6
+// comparison skills from a pasted JD (brief §2.3, §6c) to become a
+// vacancy's skill chips; recruiters can edit, add, or remove them after.
+export function buildExtractSkillsPrompt(
+  jdText: string,
+  roleTitle: string,
+): string {
+  return `From this job description for "${roleTitle}", extract the 5-6 most important skills, experience areas or traits a recruiter would compare candidates on. Keep each one short (2-5 words), concrete, and taken from the JD itself (e.g. "stakeholder management", "TikTok content production", "budget ownership"). Respond ONLY with a JSON array of strings, nothing else — no preamble, no markdown.
+
+JOB DESCRIPTION:
+${jdText}`;
+}
