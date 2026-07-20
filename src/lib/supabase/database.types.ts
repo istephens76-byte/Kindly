@@ -201,6 +201,11 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      activate_shell: {
+        Args: { p_shell_id: string };
+        Returns: void;
+      };
+    };
   };
 }
