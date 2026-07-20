@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import type { VacancySkillSource } from "@/lib/supabase/database.types";
 import { addSkill, removeSkill, type ActionState } from "./actions";
@@ -104,6 +105,13 @@ function VacancyCard({ vacancy }: { vacancy: VacancyRow }) {
       <div className="mt-3">
         <AddSkillForm vacancyId={vacancy.id} />
       </div>
+
+      <Link
+        href={`/vacancies/${vacancy.id}/generate`}
+        className="mt-3 inline-block text-sm font-semibold text-accent-dark hover:underline"
+      >
+        Write a rejection email →
+      </Link>
     </div>
   );
 }

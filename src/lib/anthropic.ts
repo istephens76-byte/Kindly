@@ -15,3 +15,4 @@ export function createAnthropicClient() {
 // Model per kindly-dev-brief.md §3: claude-sonnet-4-6 for generation and
 // extraction. A guardrail classifier pass (Phase 4) uses Haiku for cost.
 export const GENERATION_MODEL = "claude-sonnet-4-6";
+export const CLASSIFIER_MODEL = "claude-haiku-4-5-20251001";
