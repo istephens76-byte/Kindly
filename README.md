@@ -27,6 +27,8 @@ for the phase plan.
    - `20260720000004_init_vacancies.sql`
    - `20260720000005_rls_vacancies.sql`
    - `20260720000006_rls_companies_update.sql`
+   - `20260720000007_init_generations.sql`
+   - `20260720000008_rls_generations.sql`
 
    (Or, if you have the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started)
    installed and linked to the project: `supabase db push`.)

@@ -7,6 +7,13 @@ export type UserRole = "admin" | "recruiter";
 export type ShellStatus = "draft" | "active";
 export type TaxonomyKind = "reason" | "strength";
 export type VacancySkillSource = "extracted" | "manual";
+export type GenerationMode = "single" | "triage";
+export type GenerationStage =
+  | "CV / application review"
+  | "Phone screen"
+  | "First interview"
+  | "Final interview";
+export type GenerationClosing = "active" | "other" | "no";
 
 export interface Database {
   public: {
@@ -270,6 +277,136 @@ export interface Database {
             columns: ["vacancy_id"];
             isOneToOne: false;
             referencedRelation: "vacancies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      generations: {
+        Row: {
+          id: string;
+          company_id: string;
+          vacancy_id: string;
+          user_id: string | null;
+          shell_id: string | null;
+          mode: GenerationMode;
+          batch_id: string | null;
+          candidate_first_name: string | null;
+          stage: GenerationStage;
+          reason_taxonomy_id: string | null;
+          reason_skill: string | null;
+          reason_detail: string | null;
+          strength_taxonomy_id: string | null;
+          strength_detail: string | null;
+          closing: GenerationClosing;
+          talent_link_included: boolean;
+          tone: string;
+          prompt_hash: string;
+          middle_generated: string;
+          email_generated: string;
+          email_copied: string | null;
+          edit_distance: number | null;
+          guardrail_results: Record<string, unknown>;
+          ms_to_generate: number;
+          created_at: string;
+          copied_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          vacancy_id: string;
+          user_id?: string | null;
+          shell_id?: string | null;
+          mode: GenerationMode;
+          batch_id?: string | null;
+          candidate_first_name?: string | null;
+          stage: GenerationStage;
+          reason_taxonomy_id?: string | null;
+          reason_skill?: string | null;
+          reason_detail?: string | null;
+          strength_taxonomy_id?: string | null;
+          strength_detail?: string | null;
+          closing: GenerationClosing;
+          talent_link_included?: boolean;
+          tone: string;
+          prompt_hash: string;
+          middle_generated: string;
+          email_generated: string;
+          email_copied?: string | null;
+          edit_distance?: number | null;
+          guardrail_results?: Record<string, unknown>;
+          ms_to_generate: number;
+          created_at?: string;
+          copied_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          vacancy_id?: string;
+          user_id?: string | null;
+          shell_id?: string | null;
+          mode?: GenerationMode;
+          batch_id?: string | null;
+          candidate_first_name?: string | null;
+          stage?: GenerationStage;
+          reason_taxonomy_id?: string | null;
+          reason_skill?: string | null;
+          reason_detail?: string | null;
+          strength_taxonomy_id?: string | null;
+          strength_detail?: string | null;
+          closing?: GenerationClosing;
+          talent_link_included?: boolean;
+          tone?: string;
+          prompt_hash?: string;
+          middle_generated?: string;
+          email_generated?: string;
+          email_copied?: string | null;
+          edit_distance?: number | null;
+          guardrail_results?: Record<string, unknown>;
+          ms_to_generate?: number;
+          created_at?: string;
+          copied_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "generations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generations_vacancy_id_fkey";
+            columns: ["vacancy_id"];
+            isOneToOne: false;
+            referencedRelation: "vacancies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generations_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generations_shell_id_fkey";
+            columns: ["shell_id"];
+            isOneToOne: false;
+            referencedRelation: "shells";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generations_reason_taxonomy_id_fkey";
+            columns: ["reason_taxonomy_id"];
+            isOneToOne: false;
+            referencedRelation: "taxonomies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generations_strength_taxonomy_id_fkey";
+            columns: ["strength_taxonomy_id"];
+            isOneToOne: false;
+            referencedRelation: "taxonomies";
             referencedColumns: ["id"];
           },
         ];
