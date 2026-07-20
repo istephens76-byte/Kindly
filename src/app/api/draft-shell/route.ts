@@ -69,10 +69,9 @@ export async function POST() {
     companyResult.data.name,
   );
 
-  const anthropic = createAnthropicClient();
-
   let rawText: string;
   try {
+    const anthropic = createAnthropicClient();
     const message = await anthropic.messages.create({
       model: GENERATION_MODEL,
       max_tokens: 1000,

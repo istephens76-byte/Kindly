@@ -2,7 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAnthropicClient, GENERATION_MODEL } from "@/lib/anthropic";
 import { buildExtractSkillsPrompt, extractSkillsSchema } from "@/lib/prompts";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+
+// vacancies has no DELETE policy (by design — see the RLS migration), so
+// rolling back a vacancy created earlier in this same request needs the
+// service-role client. This is not a user-facing delete: it only ever
+// removes a row this same request just created after a downstream step
+// failed, same rollback pattern as onboarding/actions.ts.
+async function rollbackVacancy(vacancyId: string) {
+  await createAdminClient().from("vacancies").delete().eq("id", vacancyId);
+}
 
 const bodySchema = z.object({
   title: z.string().trim().min(1, "Role title is required").max(200),
@@ -68,10 +78,9 @@ export async function POST(request: NextRequest) {
     parsedBody.data.title,
   );
 
-  const anthropic = createAnthropicClient();
-
   let rawText: string;
   try {
+    const anthropic = createAnthropicClient();
     const message = await anthropic.messages.create({
       model: GENERATION_MODEL,
       max_tokens: 500,
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest) {
       .replace(/```json|```/g, "")
       .trim();
   } catch {
-    await supabase.from("vacancies").delete().eq("id", vacancy.id);
+    await rollbackVacancy(vacancy.id);
     return NextResponse.json(
       { error: "Couldn't extract skills — try again." },
       { status: 502 },
@@ -95,7 +104,7 @@ export async function POST(request: NextRequest) {
   try {
     parsedJson = JSON.parse(rawText);
   } catch {
-    await supabase.from("vacancies").delete().eq("id", vacancy.id);
+    await rollbackVacancy(vacancy.id);
     return NextResponse.json(
       { error: "Couldn't extract skills — try again." },
       { status: 502 },
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
 
   const parsedSkills = extractSkillsSchema.safeParse(parsedJson);
   if (!parsedSkills.success) {
-    await supabase.from("vacancies").delete().eq("id", vacancy.id);
+    await rollbackVacancy(vacancy.id);
     return NextResponse.json(
       { error: "Couldn't extract skills — try again." },
       { status: 502 },
@@ -123,7 +132,7 @@ export async function POST(request: NextRequest) {
     .select();
 
   if (skillsError || !skills) {
-    await supabase.from("vacancies").delete().eq("id", vacancy.id);
+    await rollbackVacancy(vacancy.id);
     return NextResponse.json(
       { error: "Couldn't save the skills — try again." },
       { status: 500 },
