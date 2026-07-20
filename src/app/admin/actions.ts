@@ -37,6 +37,7 @@ async function requireAdmin() {
 }
 
 const profileSchema = z.object({
+  companyName: z.string().trim().min(1, "Company name is required").max(200),
   about: z.string().trim().max(2000),
   values: z.string().trim().max(2000),
   voice: z.string().trim().max(2000),
@@ -52,6 +53,7 @@ export async function saveProfile(
   if ("error" in auth) return { error: auth.error };
 
   const parsed = profileSchema.safeParse({
+    companyName: formData.get("companyName") ?? "",
     about: formData.get("about") ?? "",
     values: formData.get("values") ?? "",
     voice: formData.get("voice") ?? "",
@@ -61,6 +63,15 @@ export async function saveProfile(
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const { error: companyError } = await auth.supabase
+    .from("companies")
+    .update({ name: parsed.data.companyName })
+    .eq("id", auth.companyId);
+
+  if (companyError) {
+    return { error: "Couldn't save the company name — try again." };
   }
 
   const { error } = await auth.supabase.from("company_profiles").upsert(

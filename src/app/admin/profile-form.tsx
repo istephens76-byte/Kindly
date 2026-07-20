@@ -6,6 +6,7 @@ import { saveProfile, type ActionState } from "./actions";
 const initialState: ActionState = {};
 
 export interface ProfileFormValues {
+  companyName: string;
   about: string;
   values: string;
   voice: string;
@@ -21,6 +22,22 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <div>
+        <label
+          className="text-xs font-semibold uppercase tracking-wide text-ink-muted"
+          htmlFor="companyName"
+        >
+          Company name
+        </label>
+        <input
+          id="companyName"
+          name="companyName"
+          defaultValue={initial.companyName}
+          required
+          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
+        />
+      </div>
+
       <div>
         <label
           className="text-xs font-semibold uppercase tracking-wide text-ink-muted"

@@ -29,25 +29,31 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  const [profileResult, shellsResult, taxonomiesResult] = await Promise.all([
-    supabase
-      .from("company_profiles")
-      .select("about, values, voice, sender_name, talent_link_url")
-      .eq("company_id", member.company_id)
-      .maybeSingle(),
-    supabase
-      .from("shells")
-      .select(
-        "id, version, status, warm_line, closing_active, closing_other, closing_no, talent_line, created_at",
-      )
-      .eq("company_id", member.company_id)
-      .order("version", { ascending: false }),
-    supabase
-      .from("taxonomies")
-      .select("id, kind, label, needs_skill, archived")
-      .eq("company_id", member.company_id)
-      .order("sort_order", { ascending: true }),
-  ]);
+  const [companyResult, profileResult, shellsResult, taxonomiesResult] =
+    await Promise.all([
+      supabase
+        .from("companies")
+        .select("name")
+        .eq("id", member.company_id)
+        .single(),
+      supabase
+        .from("company_profiles")
+        .select("about, values, voice, sender_name, talent_link_url")
+        .eq("company_id", member.company_id)
+        .maybeSingle(),
+      supabase
+        .from("shells")
+        .select(
+          "id, version, status, warm_line, closing_active, closing_other, closing_no, talent_line, created_at",
+        )
+        .eq("company_id", member.company_id)
+        .order("version", { ascending: false }),
+      supabase
+        .from("taxonomies")
+        .select("id, kind, label, needs_skill, archived")
+        .eq("company_id", member.company_id)
+        .order("sort_order", { ascending: true }),
+    ]);
 
   const profile = profileResult.data ?? {
     about: "",
@@ -75,6 +81,7 @@ export default async function AdminPage() {
         </h2>
         <ProfileForm
           initial={{
+            companyName: companyResult.data?.name ?? "",
             about: profile.about,
             values: profile.values,
             voice: profile.voice,
