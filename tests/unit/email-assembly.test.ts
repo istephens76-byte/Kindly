@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildSingleEmail, type SingleEmailInput } from "../../src/lib/email-assembly";
+import {
+  buildSingleEmail,
+  buildTriageEmail,
+  REVIEWED_LINE,
+  type SingleEmailInput,
+  type TriageEmailInput,
+} from "../../src/lib/email-assembly";
 
 const base: SingleEmailInput = {
   candidateFirstName: "Priya",
@@ -63,6 +69,54 @@ describe("buildSingleEmail", () => {
       expect(email).toContain(base.middle);
       expect(email).toContain(base.closingText);
       expect(email).toContain(`Best wishes,\n${base.senderName}`);
+    }
+  });
+});
+
+const triageBase: TriageEmailInput = {
+  candidateFirstName: "Marcus",
+  roleTitle: "Ops Lead",
+  companyName: "Acme",
+  warmLine: "We know applying takes real effort.",
+  middle: "Other applicants brought deeper hands-on experience of budget ownership.",
+  closingText: "We'd be happy to see your name for other roles.",
+  talentLine: "Register your interest here:",
+  talentLinkUrl: "https://careers.example.com/register-interest",
+  talentLinkIncluded: false,
+  senderName: "The Talent Team",
+};
+
+describe("buildTriageEmail", () => {
+  it("always includes the reviewed line", () => {
+    const email = buildTriageEmail(triageBase);
+    expect(email).toContain(REVIEWED_LINE);
+  });
+
+  it("uses the CV-stage applying opening regardless of any stage concept", () => {
+    const email = buildTriageEmail(triageBase);
+    expect(email).toContain(
+      "Thank you for applying for the Ops Lead role at Acme.",
+    );
+  });
+
+  it("omits the talent block when not ticked", () => {
+    const email = buildTriageEmail({ ...triageBase, talentLinkIncluded: false });
+    expect(email).not.toContain(triageBase.talentLine);
+  });
+
+  it("includes the talent block when ticked", () => {
+    const email = buildTriageEmail({ ...triageBase, talentLinkIncluded: true });
+    expect(email).toContain(triageBase.talentLine);
+    expect(email).toContain(triageBase.talentLinkUrl);
+  });
+
+  it("always includes the greeting, middle, closing and sign-off", () => {
+    for (const talentLinkIncluded of [true, false]) {
+      const email = buildTriageEmail({ ...triageBase, talentLinkIncluded });
+      expect(email).toContain(`Hi ${triageBase.candidateFirstName},`);
+      expect(email).toContain(triageBase.middle);
+      expect(email).toContain(triageBase.closingText);
+      expect(email).toContain(`Best wishes,\n${triageBase.senderName}`);
     }
   });
 });

@@ -121,7 +121,7 @@ function toneInstruction(tone: Tone): string {
     : "professional and courteous — contact was limited";
 }
 
-function generateMiddleProfileBlock(profile: CompanyProfileInput): string {
+function companyProfileBlock(profile: CompanyProfileInput): string {
   const parts: string[] = [];
   if (profile.about.trim()) {
     parts.push(`- About the company: ${profile.about.trim()}`);
@@ -150,7 +150,7 @@ export function buildGenerateMiddlePrompt(
   extraInstructions: string[] = [],
 ): string {
   const base = `You write the personalised middle section of a candidate rejection email for a UK employer. You will receive structured answers a recruiter tapped in, plus a company profile. Turn the answers into EXACTLY 2-3 warm, human sentences in the company's voice.
-${generateMiddleProfileBlock(profile)}
+${companyProfileBlock(profile)}
 HARD RULES:
 - UK English. Plain, kind, specific. Write like a thoughtful person at this company, not HR boilerplate.
 - Match the employer brand voice and style above. If a company value or behaviour genuinely connects to the candidate's strength, you may echo its language naturally — never bolt values on artificially or name-check them like a checklist.
@@ -199,4 +199,68 @@ ${middleText}
 """
 
 Respond ONLY with JSON, no markdown fences: {"flag": true or false, "reason": "one short sentence explaining what was flagged, or an empty string if flag is false"}`;
+}
+
+// The client sends this exact sentinel when the recruiter taps "role
+// changed / paused" instead of a skill chip (brief §6b, ported from the
+// prototype's triage row shape).
+export const ROLE_CHANGED_SENTINEL = "__changed__";
+
+export interface TriageCandidateInput {
+  name: string;
+  skillOrChanged: string;
+}
+
+// Parses the model's JSON response for buildTriageMiddlesPrompt. The
+// expected array length depends on how many candidates were sent in a
+// given call, so the route checks the count separately after this parses.
+export const triageMiddlesSchema = z.object({
+  middles: z.array(z.string().min(1)),
+});
+
+export type TriageMiddlesOutput = z.infer<typeof triageMiddlesSchema>;
+
+// Ported from generateTriageMiddles() in kindly-prototype-v4.jsx. Writes
+// one or two CV-stage middle sentences per candidate in a single batched
+// call (brief §6b step 2) — used both for the initial chunk-of-~15 call
+// and, with a single-element candidates array plus an avoid-instruction,
+// for the solo regenerate when one candidate's middle fails a guardrail
+// layer (step 3).
+export function buildTriageMiddlesPrompt(
+  candidates: TriageCandidateInput[],
+  roleTitle: string,
+  profile: CompanyProfileInput,
+  extraInstructions: string[] = [],
+): string {
+  const list = candidates
+    .map((candidate, index) => {
+      const reason =
+        candidate.skillOrChanged === ROLE_CHANGED_SENTINEL
+          ? "the role requirements changed or the role was paused"
+          : `other applicants having more hands-on experience of ${candidate.skillOrChanged}`;
+      return `${index + 1}. ${candidate.name} — decision came down to: ${reason}`;
+    })
+    .join("\n");
+
+  const base = `You write the personalised middle sentences of CV-stage rejection emails for a UK employer. A human recruiter has individually reviewed each application against the job description and tapped the specific reason for each candidate. Write ONE OR TWO short sentences per candidate explaining the decision.
+${companyProfileBlock(profile)}
+HARD RULES:
+- UK English. Plain, kind, specific. Sound like this company, not HR software.
+- These candidates were not interviewed — do not invent personal knowledge of them, do not reference strengths, interviews, or conversations. The sentences explain the decision only.
+- BANNED phrases: "unfortunately", "we regret", "after careful consideration", "at this time", "we wish you the best".
+- NEVER mention or imply age, health, disability, family circumstances, employment gaps, nationality, or any protected characteristic.
+- Frame each decision around the strength of the applicant field and the specific requirement. Do not use the word "recent" about experience (it can imply age). Say "more hands-on experience of X" or "deeper experience of X". Never frame it as the candidate's personal deficiency.
+- Vary the sentence construction between candidates so identical reasons don't produce identical robotic emails, but keep meaning faithful to the recruiter's tapped reason.
+- No greetings, no sign-offs, no candidate names inside the sentences.
+
+ROLE: ${roleTitle}
+
+CANDIDATES:
+${list}`;
+
+  const extra = extraInstructions.length
+    ? `\n\n${extraInstructions.join("\n")}`
+    : "";
+
+  return `${base}${extra}\n\nRespond ONLY with JSON, no markdown fences: {"middles": ["sentence(s) for candidate 1", "sentence(s) for candidate 2", ...]} — exactly ${candidates.length} entries, same order.`;
 }

@@ -7,10 +7,13 @@ import {
   buildExtractSkillsPrompt,
   buildGenerateMiddlePrompt,
   buildRegexAvoidInstruction,
+  buildTriageMiddlesPrompt,
   classifierSchema,
   extractSkillsSchema,
   generateMiddleSchema,
   JSON_ONLY_RETRY_INSTRUCTION,
+  ROLE_CHANGED_SENTINEL,
+  triageMiddlesSchema,
   type GenerateMiddleAnswers,
 } from "../../src/lib/prompts";
 
@@ -238,5 +241,74 @@ describe("classifierSchema", () => {
 
   it("rejects a missing flag", () => {
     expect(classifierSchema.safeParse({ reason: "x" }).success).toBe(false);
+  });
+});
+
+describe("buildTriageMiddlesPrompt", () => {
+  it("includes each candidate's name and skill-based reason", () => {
+    const prompt = buildTriageMiddlesPrompt(
+      [
+        { name: "Priya", skillOrChanged: "paid social campaigns" },
+        { name: "Marcus", skillOrChanged: "budget ownership" },
+      ],
+      "Social Media Manager",
+      { about: "", values: "", voice: "" },
+    );
+    expect(prompt).toContain("Priya");
+    expect(prompt).toContain("more hands-on experience of paid social campaigns");
+    expect(prompt).toContain("Marcus");
+    expect(prompt).toContain("more hands-on experience of budget ownership");
+    expect(prompt).toContain("exactly 2 entries");
+  });
+
+  it("phrases the role-changed sentinel differently from a skill", () => {
+    const prompt = buildTriageMiddlesPrompt(
+      [{ name: "Sofia", skillOrChanged: ROLE_CHANGED_SENTINEL }],
+      "Social Media Manager",
+      { about: "", values: "", voice: "" },
+    );
+    expect(prompt).toContain(
+      "the role requirements changed or the role was paused",
+    );
+    expect(prompt).not.toContain(ROLE_CHANGED_SENTINEL);
+  });
+
+  it("never invokes strengths or interview language (CV-stage only)", () => {
+    const prompt = buildTriageMiddlesPrompt(
+      [{ name: "Jake", skillOrChanged: "stakeholder management" }],
+      "Ops Lead",
+      { about: "", values: "", voice: "" },
+    );
+    expect(prompt).toContain("were not interviewed");
+  });
+
+  it("appends extra retry instructions", () => {
+    const prompt = buildTriageMiddlesPrompt(
+      [{ name: "Jake", skillOrChanged: "stakeholder management" }],
+      "Ops Lead",
+      { about: "", values: "", voice: "" },
+      [JSON_ONLY_RETRY_INSTRUCTION],
+    );
+    expect(prompt).toContain(JSON_ONLY_RETRY_INSTRUCTION);
+  });
+});
+
+describe("triageMiddlesSchema", () => {
+  it("accepts a well-formed array of middles", () => {
+    const result = triageMiddlesSchema.safeParse({
+      middles: ["Sentence one.", "Sentence two."],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing middles key", () => {
+    expect(triageMiddlesSchema.safeParse({}).success).toBe(false);
+  });
+
+  it("rejects an empty string entry", () => {
+    const result = triageMiddlesSchema.safeParse({
+      middles: ["Sentence one.", ""],
+    });
+    expect(result.success).toBe(false);
   });
 });
