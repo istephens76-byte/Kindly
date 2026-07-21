@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,6 +39,14 @@ export default async function DashboardPage() {
         <p className="mt-2 text-sm text-ink-muted">
           Signed in as {membership.display_name} · {membership.role}
         </p>
+        {membership.role === "admin" && (
+          <Link
+            href="/admin"
+            className="mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white"
+          >
+            Go to Template Studio
+          </Link>
+        )}
       </div>
     </main>
   );

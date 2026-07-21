@@ -84,9 +84,16 @@ function TaxonomyList({
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-semibold text-ink">
-        {kind === "reason" ? "Reasons" : "Strengths"}
-      </h3>
+      <div>
+        <h3 className="text-sm font-semibold text-ink">
+          {kind === "reason" ? "Reasons" : "Strengths"}
+        </h3>
+        <p className="mt-1 text-xs text-ink-muted">
+          {kind === "reason"
+            ? "The tappable reasons recruiters choose from when explaining why a candidate wasn't successful."
+            : "The tappable positives recruiters acknowledge for the candidate, even when passing on them."}
+        </p>
+      </div>
       <ul className="flex flex-col gap-2">
         {filtered.map((row) => (
           <li

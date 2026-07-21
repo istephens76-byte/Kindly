@@ -23,7 +23,7 @@ export interface ShellRow {
 
 const REVIEW_NUDGE_DAYS = 182;
 
-function DraftShellButton() {
+function DraftShellButton({ hasAnyShell }: { hasAnyShell: boolean }) {
   const { draft, pending, error } = useDraftShell();
 
   return (
@@ -33,7 +33,11 @@ function DraftShellButton() {
         disabled={pending}
         className="rounded-lg bg-amber px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50"
       >
-        {pending ? "Drafting…" : "Draft another version in our voice"}
+        {pending
+          ? "Drafting…"
+          : hasAnyShell
+            ? "Draft another version in our voice"
+            : "Draft in our voice"}
       </button>
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
     </div>
@@ -150,6 +154,37 @@ function ShellDraftEditor({ shell }: { shell: ShellRow }) {
   );
 }
 
+function ShellVersionHeader({ shell }: { shell: ShellRow }) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className="text-sm font-semibold text-ink">
+        Version {shell.version}
+      </span>
+      <span
+        className={
+          shell.status === "active"
+            ? "rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white"
+            : "rounded-full bg-border px-2 py-0.5 text-xs font-semibold text-ink-muted"
+        }
+      >
+        {shell.status === "active"
+          ? "Active"
+          : shell.status === "superseded"
+            ? "Superseded"
+            : "Draft"}
+      </span>
+    </div>
+  );
+}
+
+function ReadOnlyShellSummary({ shell }: { shell: ShellRow }) {
+  return (
+    <div className="rounded-xl border border-border p-4 text-sm text-ink-muted">
+      <p>{shell.warm_line}</p>
+    </div>
+  );
+}
+
 function reviewNudge(activeShell: ShellRow | undefined): string | null {
   if (!activeShell) return null;
   const daysSince =
@@ -164,6 +199,10 @@ function reviewNudge(activeShell: ShellRow | undefined): string | null {
 
 export function ShellEditor({ shells }: { shells: ShellRow[] }) {
   const activeShell = shells.find((s) => s.status === "active");
+  const draftShell = shells.find((s) => s.status === "draft");
+  const previousShells = shells.filter(
+    (s) => s.id !== activeShell?.id && s.id !== draftShell?.id,
+  );
   const nudge = reviewNudge(activeShell);
 
   return (
@@ -174,7 +213,7 @@ export function ShellEditor({ shells }: { shells: ShellRow[] }) {
         </p>
       )}
 
-      <DraftShellButton />
+      <DraftShellButton hasAnyShell={shells.length > 0} />
 
       {shells.length === 0 && (
         <p className="text-sm text-ink-muted">
@@ -183,37 +222,35 @@ export function ShellEditor({ shells }: { shells: ShellRow[] }) {
         </p>
       )}
 
-      <div className="flex flex-col gap-3">
-        {shells.map((shell) => (
-          <div key={shell.id}>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-semibold text-ink">
-                Version {shell.version}
-              </span>
-              <span
-                className={
-                  shell.status === "active"
-                    ? "rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white"
-                    : "rounded-full bg-border px-2 py-0.5 text-xs font-semibold text-ink-muted"
-                }
-              >
-                {shell.status === "active"
-                  ? "Active"
-                  : shell.status === "superseded"
-                    ? "Superseded"
-                    : "Draft"}
-              </span>
-            </div>
-            {shell.status === "draft" ? (
-              <ShellDraftEditor shell={shell} />
-            ) : (
-              <div className="rounded-xl border border-border p-4 text-sm text-ink-muted">
-                <p>{shell.warm_line}</p>
+      {draftShell && (
+        <div>
+          <ShellVersionHeader shell={draftShell} />
+          <ShellDraftEditor shell={draftShell} />
+        </div>
+      )}
+
+      {activeShell && (
+        <div>
+          <ShellVersionHeader shell={activeShell} />
+          <ReadOnlyShellSummary shell={activeShell} />
+        </div>
+      )}
+
+      {previousShells.length > 0 && (
+        <details className="rounded-xl border border-border">
+          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-ink-muted hover:text-accent-dark">
+            Previous versions ({previousShells.length})
+          </summary>
+          <div className="flex flex-col gap-3 border-t border-border p-4">
+            {previousShells.map((shell) => (
+              <div key={shell.id}>
+                <ShellVersionHeader shell={shell} />
+                <ReadOnlyShellSummary shell={shell} />
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </details>
+      )}
     </div>
   );
 }
