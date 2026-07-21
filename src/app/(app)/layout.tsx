@@ -52,6 +52,12 @@ export default async function AppLayout({
             {company?.name ?? "Kindly"}
           </Link>
           <div className="flex flex-wrap items-center gap-4 text-sm font-semibold">
+            <Link
+              href="/dashboard"
+              className="text-ink-muted hover:text-accent-dark"
+            >
+              Dashboard
+            </Link>
             {member.role === "admin" && (
               <Link
                 href="/admin"
@@ -60,6 +66,12 @@ export default async function AppLayout({
                 Template Studio
               </Link>
             )}
+            <Link
+              href="/vacancies"
+              className="text-ink-muted hover:text-accent-dark"
+            >
+              Vacancies
+            </Link>
             {member.role === "admin" && (
               <Link
                 href="/admin/insights"
@@ -68,18 +80,6 @@ export default async function AppLayout({
                 Insights
               </Link>
             )}
-            <Link
-              href="/vacancies"
-              className="text-ink-muted hover:text-accent-dark"
-            >
-              Vacancies
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-ink-muted hover:text-accent-dark"
-            >
-              Dashboard
-            </Link>
             <SignOutButton />
           </div>
         </nav>

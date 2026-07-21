@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewTemplateButton } from "./new-template-button";
@@ -71,9 +72,6 @@ export default async function AdminPage() {
           Set up your company profile, then create your rejection email
           template.
         </p>
-        <div className="mt-4">
-          <NewTemplateButton />
-        </div>
       </div>
 
       <section className="rounded-2xl border border-border bg-white p-6">
@@ -90,22 +88,47 @@ export default async function AdminPage() {
             talentLinkUrl: profile.talent_link_url,
           }}
         />
+        <div className="mt-6 border-t border-border pt-4">
+          <p className="mb-3 text-sm text-ink-muted">
+            Once your profile&apos;s saved, create your rejection email
+            template in your voice.
+          </p>
+          <NewTemplateButton />
+        </div>
       </section>
 
       <section
         id="shell-section"
         className="rounded-2xl border border-border bg-white p-6"
       >
-        <h2 className="mb-4 text-lg font-semibold text-ink">
+        <h2 className="mb-1 text-lg font-semibold text-ink">
           Rejection email shell
         </h2>
+        <p className="mb-4 text-sm text-ink-muted">
+          Use the AI-drafted lines as they are, or edit any line below to
+          match your voice — nothing reaches candidates until you activate a
+          version.
+        </p>
         <ShellEditor shells={shellsResult.data ?? []} />
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-ink">Taxonomies</h2>
+        <h2 className="mb-1 text-lg font-semibold text-ink">Taxonomies</h2>
+        <p className="mb-4 text-sm text-ink-muted">
+          The tappable chips recruiters choose from when writing a rejection
+          email.
+        </p>
         <TaxonomyManager rows={taxonomiesResult.data ?? []} />
       </section>
+
+      <div className="flex justify-center">
+        <Link
+          href="/vacancies"
+          className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white"
+        >
+          Go to Vacancies →
+        </Link>
+      </div>
     </main>
   );
 }
