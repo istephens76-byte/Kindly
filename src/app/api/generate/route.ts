@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   CLASSIFIER_MODEL,
   createAnthropicClient,
+  extractAnthropicText,
   GENERATION_MODEL,
 } from "@/lib/anthropic";
 import { buildSingleEmail } from "@/lib/email-assembly";
@@ -41,17 +42,6 @@ const bodySchema = z.object({
 });
 
 const GENERIC_FAILURE = "Couldn't write this one — try again.";
-
-async function extractText(message: {
-  content: Array<{ type: string; text?: string }>;
-}): Promise<string> {
-  return message.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text ?? "")
-    .join("\n")
-    .replace(/```json|```/g, "")
-    .trim();
-}
 
 // Brief §6a: authorise + validate, load everything server-side (never
 // trust client-provided labels), run the three-layer guardrail pipeline
@@ -218,7 +208,7 @@ export async function POST(request: NextRequest) {
         max_tokens: 500,
         messages: [{ role: "user", content: prompt }],
       });
-      rawText = await extractText(message);
+      rawText = extractAnthropicText(message);
     } catch {
       failureReason = GENERIC_FAILURE;
       break;
@@ -268,7 +258,7 @@ export async function POST(request: NextRequest) {
           { role: "user", content: buildClassifierPrompt(candidateMiddle) },
         ],
       });
-      const classifierText = await extractText(classifierMessage);
+      const classifierText = extractAnthropicText(classifierMessage);
       const classifierParsed = classifierSchema.safeParse(
         JSON.parse(classifierText),
       );

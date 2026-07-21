@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { createAnthropicClient, GENERATION_MODEL } from "@/lib/anthropic";
+import {
+  createAnthropicClient,
+  extractAnthropicText,
+  GENERATION_MODEL,
+} from "@/lib/anthropic";
 import { buildExtractSkillsPrompt, extractSkillsSchema } from "@/lib/prompts";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -86,12 +90,7 @@ export async function POST(request: NextRequest) {
       max_tokens: 500,
       messages: [{ role: "user", content: prompt }],
     });
-    rawText = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .replace(/```json|```/g, "")
-      .trim();
+    rawText = extractAnthropicText(message);
   } catch {
     await rollbackVacancy(vacancy.id);
     return NextResponse.json(
