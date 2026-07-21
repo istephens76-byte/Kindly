@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import type { VacancySkillSource } from "@/lib/supabase/database.types";
-import { addSkill, removeSkill, type ActionState } from "./actions";
+import {
+  addSkill,
+  removeSkill,
+  setVacancyArchived,
+  type ActionState,
+} from "./actions";
 
 export interface SkillChip {
   id: string;
@@ -15,6 +20,7 @@ export interface VacancyRow {
   id: string;
   title: string;
   created_at: string;
+  archived: boolean;
   skills: SkillChip[];
 }
 
@@ -73,18 +79,56 @@ function AddSkillForm({ vacancyId }: { vacancyId: string }) {
   );
 }
 
+function ArchiveVacancyButton({
+  vacancyId,
+  archived,
+}: {
+  vacancyId: string;
+  archived: boolean;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleClick() {
+    setError(null);
+    startTransition(async () => {
+      const result = await setVacancyArchived(vacancyId, !archived);
+      if (result.error) setError(result.error);
+    });
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        onClick={handleClick}
+        disabled={pending}
+        className="text-xs font-semibold text-ink-muted hover:text-accent-dark disabled:opacity-50"
+      >
+        {pending ? "Saving…" : archived ? "Restore" : "Archive"}
+      </button>
+      {error && <span className="text-xs text-red-700">{error}</span>}
+    </span>
+  );
+}
+
 function VacancyCard({ vacancy }: { vacancy: VacancyRow }) {
   return (
     <div className="rounded-xl border border-border p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-ink">{vacancy.title}</h3>
-        <span className="text-xs text-ink-muted">
-          {new Date(vacancy.created_at).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-ink-muted">
+            {new Date(vacancy.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+          <ArchiveVacancyButton
+            vacancyId={vacancy.id}
+            archived={vacancy.archived}
+          />
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -133,11 +177,36 @@ export function VacancyList({ vacancies }: { vacancies: VacancyRow[] }) {
     );
   }
 
+  const active = vacancies.filter((v) => !v.archived);
+  const archived = vacancies.filter((v) => v.archived);
+
   return (
-    <div className="flex flex-col gap-3">
-      {vacancies.map((vacancy) => (
-        <VacancyCard key={vacancy.id} vacancy={vacancy} />
-      ))}
+    <div className="flex flex-col gap-4">
+      {active.length === 0 ? (
+        <p className="text-sm text-ink-muted">
+          No open vacancies — restore one below, or paste a job description
+          above to start a new one.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {active.map((vacancy) => (
+            <VacancyCard key={vacancy.id} vacancy={vacancy} />
+          ))}
+        </div>
+      )}
+
+      {archived.length > 0 && (
+        <details className="rounded-xl border border-border">
+          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-ink-muted hover:text-accent-dark">
+            Archived vacancies ({archived.length})
+          </summary>
+          <div className="flex flex-col gap-3 border-t border-border p-4">
+            {archived.map((vacancy) => (
+              <VacancyCard key={vacancy.id} vacancy={vacancy} />
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

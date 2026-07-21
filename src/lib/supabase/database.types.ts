@@ -213,6 +213,7 @@ export interface Database {
           company_id: string;
           title: string;
           jd_text: string;
+          archived: boolean;
           created_by: string | null;
           created_at: string;
         };
@@ -221,6 +222,7 @@ export interface Database {
           company_id: string;
           title: string;
           jd_text: string;
+          archived?: boolean;
           created_by?: string | null;
           created_at?: string;
         };
@@ -229,6 +231,7 @@ export interface Database {
           company_id?: string;
           title?: string;
           jd_text?: string;
+          archived?: boolean;
           created_by?: string | null;
           created_at?: string;
         };

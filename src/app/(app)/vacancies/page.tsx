@@ -25,7 +25,7 @@ export default async function VacanciesPage() {
 
   const { data: vacancies } = await supabase
     .from("vacancies")
-    .select("id, title, created_at, vacancy_skills(id, label, source)")
+    .select("id, title, created_at, archived, vacancy_skills(id, label, source)")
     .eq("company_id", member.company_id)
     .order("created_at", { ascending: false });
 
@@ -33,6 +33,7 @@ export default async function VacanciesPage() {
     id: v.id,
     title: v.title,
     created_at: v.created_at,
+    archived: v.archived,
     skills: v.vacancy_skills,
   }));
 
