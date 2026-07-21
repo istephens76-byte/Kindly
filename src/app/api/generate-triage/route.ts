@@ -22,6 +22,10 @@ import {
   type CompanyProfileInput,
   type TriageCandidateInput,
 } from "@/lib/prompts";
+import {
+  TRIAGE_RATE_LIMIT_PER_MINUTE,
+  triageBatchesInLastMinute,
+} from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -267,6 +271,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "No company found for this account." },
       { status: 403 },
+    );
+  }
+
+  const recentBatches = await triageBatchesInLastMinute(supabase, user.id);
+  if (recentBatches >= TRIAGE_RATE_LIMIT_PER_MINUTE) {
+    return NextResponse.json(
+      { error: "Too many batches written in the last minute — wait a moment and try again." },
+      { status: 429 },
     );
   }
 
