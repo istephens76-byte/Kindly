@@ -3,10 +3,28 @@ import { createAnthropicClient, GENERATION_MODEL } from "@/lib/anthropic";
 import { brandShellSchema, buildBrandShellPrompt } from "@/lib/prompts";
 import { createClient } from "@/lib/supabase/server";
 
+async function nextVersionFor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+): Promise<number> {
+  const { data: latestShell } = await supabase
+    .from("shells")
+    .select("version")
+    .eq("company_id", companyId)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (latestShell?.version ?? 0) + 1;
+}
+
 // Brief §6c: drafts the five fixed shell lines from the company's saved
-// profile and inserts a new `shells` row with status='draft'. Takes no
-// request body — the profile is loaded server-side, never trusted from the
-// client (same principle as the other routes in §6).
+// profile. Overwrites the company's existing in-progress draft (if any) in
+// place rather than inserting a new version each time — re-rolling "Draft
+// in our voice" several times while iterating shouldn't leave a trail of
+// permanent, never-activated versions. A version only becomes permanent
+// once it's activated (see activate_shell). Takes no request body — the
+// profile is loaded server-side, never trusted from the client (same
+// principle as the other routes in §6).
 export async function POST() {
   const supabase = await createClient();
   const {
@@ -108,27 +126,31 @@ export async function POST() {
     );
   }
 
-  const { data: latestShell } = await supabase
+  const { data: existingDraft } = await supabase
     .from("shells")
-    .select("version")
+    .select("id")
     .eq("company_id", member.company_id)
-    .order("version", { ascending: false })
-    .limit(1)
+    .eq("status", "draft")
     .maybeSingle();
 
-  const nextVersion = (latestShell?.version ?? 0) + 1;
-
-  const { data: shell, error: shellError } = await supabase
-    .from("shells")
-    .insert({
-      company_id: member.company_id,
-      version: nextVersion,
-      ...parsed.data,
-      status: "draft",
-      created_by: user.id,
-    })
-    .select()
-    .single();
+  const { data: shell, error: shellError } = existingDraft
+    ? await supabase
+        .from("shells")
+        .update({ ...parsed.data, created_by: user.id })
+        .eq("id", existingDraft.id)
+        .select()
+        .single()
+    : await supabase
+        .from("shells")
+        .insert({
+          company_id: member.company_id,
+          version: await nextVersionFor(supabase, member.company_id),
+          ...parsed.data,
+          status: "draft",
+          created_by: user.id,
+        })
+        .select()
+        .single();
 
   if (shellError || !shell) {
     return NextResponse.json(

@@ -4,7 +4,7 @@
 // file's shape in sync with new migrations until then.
 
 export type UserRole = "admin" | "recruiter";
-export type ShellStatus = "draft" | "active";
+export type ShellStatus = "draft" | "active" | "superseded";
 export type TaxonomyKind = "reason" | "strength";
 export type VacancySkillSource = "extracted" | "manual";
 export type GenerationMode = "single" | "triage";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { singleOpening } from "@/lib/email-assembly";
 
 const STAGES = [
   "CV / application review",
@@ -52,14 +53,32 @@ function Chip({
 
 export function GenerateForm({
   vacancyId,
+  roleTitle,
   skills,
   reasons,
   strengths,
+  companyName,
+  warmLine,
+  closingActive,
+  closingOther,
+  closingNo,
+  talentLine,
+  talentLinkUrl,
+  senderName,
 }: {
   vacancyId: string;
+  roleTitle: string;
   skills: string[];
   reasons: ReasonOption[];
   strengths: StrengthOption[];
+  companyName: string;
+  warmLine: string;
+  closingActive: string;
+  closingOther: string;
+  closingNo: string;
+  talentLine: string;
+  talentLinkUrl: string;
+  senderName: string;
 }) {
   const [candidateFirstName, setCandidateFirstName] = useState("");
   const [stage, setStage] = useState<(typeof STAGES)[number]>(STAGES[0]);
@@ -152,171 +171,208 @@ export function GenerateForm({
     }
   }
 
+  const closingTextByKey = {
+    active: closingActive,
+    other: closingOther,
+    no: closingNo,
+  };
+  const opening = singleOpening(stage, roleTitle, companyName);
+  const talentBlock = `${talentLine} ${talentLinkUrl}`;
+  const placeholderText = canGenerate
+    ? `Tap "Write the email" — the personalised 2-3 sentences land here, in your brand voice.`
+    : "The AI-written middle appears here once you've answered the questions.";
+
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <label
-          className="text-xs font-semibold uppercase tracking-wide text-ink-muted"
-          htmlFor="candidateFirstName"
-        >
-          Candidate first name
-        </label>
-        <input
-          id="candidateFirstName"
-          value={candidateFirstName}
-          onChange={(e) => setCandidateFirstName(e.target.value)}
-          placeholder="e.g. Priya"
-          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
-        />
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Stage reached
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {STAGES.map((s) => (
-            <Chip key={s} label={s} active={stage === s} onClick={() => setStage(s)} />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Reason for rejection
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {reasons.map((reason) => (
-            <Chip
-              key={reason.id}
-              label={reason.label}
-              active={reasonTaxonomyId === reason.id}
-              onClick={() => {
-                setReasonTaxonomyId(reason.id);
-                setReasonSkill(null);
-              }}
-            />
-          ))}
-        </div>
-        {selectedReason?.needs_skill && (
-          <div className="mt-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              Which requirement, specifically?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
-                <Chip
-                  key={skill}
-                  label={skill}
-                  active={reasonSkill === skill}
-                  onClick={() => setReasonSkill(skill)}
-                />
-              ))}
-              {skills.length === 0 && (
-                <p className="text-sm text-ink-muted">
-                  This vacancy has no skill chips yet — add some from the
-                  vacancies list.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-        <textarea
-          value={reasonDetail}
-          onChange={(e) => setReasonDetail(e.target.value)}
-          placeholder="Optional nuance for this candidate…"
-          rows={2}
-          className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
-        />
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Their standout strength
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {strengths.map((strength) => (
-            <Chip
-              key={strength.id}
-              label={strength.label}
-              active={strengthTaxonomyId === strength.id}
-              onClick={() => setStrengthTaxonomyId(strength.id)}
-            />
-          ))}
-        </div>
-        <textarea
-          value={strengthDetail}
-          onChange={(e) => setStrengthDetail(e.target.value)}
-          placeholder="Optional detail…"
-          rows={2}
-          className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
-        />
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          How should it end?
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {CLOSINGS.map((c) => (
-            <Chip
-              key={c.id}
-              label={c.label}
-              active={closing === c.id}
-              onClick={() => setClosing(c.id)}
-            />
-          ))}
-        </div>
-        <label className="mt-3 flex items-start gap-2 text-sm text-ink">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr] lg:items-start">
+      <div className="flex flex-col gap-6">
+        <div>
+          <label
+            className="text-xs font-semibold uppercase tracking-wide text-ink-muted"
+            htmlFor="candidateFirstName"
+          >
+            Candidate first name
+          </label>
           <input
-            type="checkbox"
-            checked={talentLinkIncluded}
-            onChange={(e) => setTalentLinkIncluded(e.target.checked)}
-            className="mt-0.5 accent-accent"
+            id="candidateFirstName"
+            value={candidateFirstName}
+            onChange={(e) => setCandidateFirstName(e.target.value)}
+            placeholder="e.g. Priya"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
           />
-          <span>
-            Include the talent link
-            <span className="block text-xs text-ink-muted">
-              Adds your register-interest line and link before the sign-off.
-            </span>
-          </span>
-        </label>
-      </div>
+        </div>
 
-      <button
-        type="button"
-        onClick={handleGenerate}
-        disabled={!canGenerate || generating}
-        className="self-start rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-      >
-        {generating ? "Writing…" : "Write the email"}
-      </button>
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Stage reached
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {STAGES.map((s) => (
+              <Chip
+                key={s}
+                label={s}
+                active={stage === s}
+                onClick={() => setStage(s)}
+              />
+            ))}
+          </div>
+        </div>
 
-      {error && <p className="text-sm text-red-700">{error}</p>}
-
-      {emailText && (
-        <div className="rounded-2xl border border-border bg-white p-6">
-          {writtenInSeconds !== null && (
-            <p className="mb-3 text-xs font-semibold text-accent-dark">
-              Written in {writtenInSeconds}s
-            </p>
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Reason for rejection
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {reasons.map((reason) => (
+              <Chip
+                key={reason.id}
+                label={reason.label}
+                active={reasonTaxonomyId === reason.id}
+                onClick={() => {
+                  setReasonTaxonomyId(reason.id);
+                  setReasonSkill(null);
+                }}
+              />
+            ))}
+          </div>
+          {selectedReason?.needs_skill && (
+            <div className="mt-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Which requirement, specifically?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <Chip
+                    key={skill}
+                    label={skill}
+                    active={reasonSkill === skill}
+                    onClick={() => setReasonSkill(skill)}
+                  />
+                ))}
+                {skills.length === 0 && (
+                  <p className="text-sm text-ink-muted">
+                    This vacancy has no skill chips yet — add some from the
+                    vacancies list.
+                  </p>
+                )}
+              </div>
+            </div>
           )}
           <textarea
-            value={emailText}
-            onChange={(e) => setEmailText(e.target.value)}
-            rows={14}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm leading-relaxed focus:border-accent focus:outline-none"
+            value={reasonDetail}
+            onChange={(e) => setReasonDetail(e.target.value)}
+            placeholder="Optional nuance for this candidate…"
+            rows={2}
+            className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
           />
-          <button
-            type="button"
-            onClick={handleCopy}
-            disabled={copyState === "copying"}
-            className="mt-4 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink-muted hover:border-accent disabled:opacity-50"
-          >
-            {copyState === "copied" ? "Copied" : "Copy to clipboard"}
-          </button>
         </div>
-      )}
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Their standout strength
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {strengths.map((strength) => (
+              <Chip
+                key={strength.id}
+                label={strength.label}
+                active={strengthTaxonomyId === strength.id}
+                onClick={() => setStrengthTaxonomyId(strength.id)}
+              />
+            ))}
+          </div>
+          <textarea
+            value={strengthDetail}
+            onChange={(e) => setStrengthDetail(e.target.value)}
+            placeholder="Optional detail…"
+            rows={2}
+            className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            How should it end?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {CLOSINGS.map((c) => (
+              <Chip
+                key={c.id}
+                label={c.label}
+                active={closing === c.id}
+                onClick={() => setClosing(c.id)}
+              />
+            ))}
+          </div>
+          <label className="mt-3 flex items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={talentLinkIncluded}
+              onChange={(e) => setTalentLinkIncluded(e.target.checked)}
+              className="mt-0.5 accent-accent"
+            />
+            <span>
+              Include the talent link
+              <span className="block text-xs text-ink-muted">
+                Adds your register-interest line and link before the
+                sign-off.
+              </span>
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={!canGenerate || generating}
+          className="self-start rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {generating ? "Writing…" : "Write the email"}
+        </button>
+
+        {error && <p className="text-sm text-red-700">{error}</p>}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-white p-6 lg:sticky lg:top-6">
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <h2 className="text-sm font-semibold text-ink">
+            {emailText ? "Ready to send" : "Live preview"}
+          </h2>
+          {writtenInSeconds !== null && (
+            <span className="text-xs font-semibold text-accent-dark">
+              Written in {writtenInSeconds}s
+            </span>
+          )}
+        </div>
+
+        {!emailText ? (
+          <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
+            {`Hi ${candidateFirstName.trim() || "[first name]"},\n\n${opening} ${warmLine}\n\n`}
+            <span className="inline-block rounded border-l-4 border-amber bg-amber-light px-2 py-1 italic text-ink-muted">
+              {placeholderText}
+            </span>
+            {`\n\n${closingTextByKey[closing]}\n\n${
+              talentLinkIncluded ? `${talentBlock}\n\n` : ""
+            }Thanks again for your interest in ${companyName}.\n\nBest wishes,\n${senderName}`}
+          </div>
+        ) : (
+          <>
+            <textarea
+              value={emailText}
+              onChange={(e) => setEmailText(e.target.value)}
+              rows={14}
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm leading-relaxed focus:border-accent focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={copyState === "copying"}
+              className="mt-4 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink-muted hover:border-accent disabled:opacity-50"
+            >
+              {copyState === "copied" ? "Copied" : "Copy to clipboard"}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

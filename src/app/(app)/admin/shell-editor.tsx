@@ -217,7 +217,11 @@ export function ShellEditor({ shells }: { shells: ShellRow[] }) {
                     : "rounded-full bg-border px-2 py-0.5 text-xs font-semibold text-ink-muted"
                 }
               >
-                {shell.status === "active" ? "Active" : "Draft"}
+                {shell.status === "active"
+                  ? "Active"
+                  : shell.status === "superseded"
+                    ? "Superseded"
+                    : "Draft"}
               </span>
             </div>
             {shell.status === "draft" ? (
