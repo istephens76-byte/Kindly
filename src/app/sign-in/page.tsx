@@ -9,10 +9,12 @@ type Status = "idle" | "sending" | "sent" | "error";
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
+    setErrorMessage(null);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -20,7 +22,20 @@ export default function SignInPage() {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    setStatus(error ? "error" : "sent");
+
+    if (error) {
+      setStatus("error");
+      // Supabase's rate-limit code gets a clearer, more actionable message;
+      // anything else falls back to whatever Supabase actually reported,
+      // since a real reason beats a generic "try again" every time.
+      setErrorMessage(
+        error.code === "over_email_send_rate_limit"
+          ? "Too many sign-in emails were sent recently — please wait a few minutes and try again."
+          : error.message,
+      );
+    } else {
+      setStatus("sent");
+    }
   }
 
   return (
@@ -63,7 +78,7 @@ export default function SignInPage() {
             </button>
             {status === "error" && (
               <p className="text-sm text-red-700">
-                Couldn&apos;t send the link — try again.
+                {errorMessage ?? "Couldn't send the link — try again."}
               </p>
             )}
           </form>
