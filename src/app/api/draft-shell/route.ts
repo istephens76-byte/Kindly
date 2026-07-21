@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { createAnthropicClient, GENERATION_MODEL } from "@/lib/anthropic";
+import {
+  createAnthropicClient,
+  extractAnthropicText,
+  GENERATION_MODEL,
+} from "@/lib/anthropic";
 import { brandShellSchema, buildBrandShellPrompt } from "@/lib/prompts";
 import { createClient } from "@/lib/supabase/server";
 
@@ -95,12 +99,7 @@ export async function POST() {
       max_tokens: 1000,
       messages: [{ role: "user", content: prompt }],
     });
-    rawText = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .replace(/```json|```/g, "")
-      .trim();
+    rawText = extractAnthropicText(message);
   } catch {
     return NextResponse.json(
       { error: "Couldn't draft the shell — try again." },

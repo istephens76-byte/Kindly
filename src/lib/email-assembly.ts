@@ -42,3 +42,33 @@ export function buildSingleEmail(input: SingleEmailInput): string {
     input.talentLinkIncluded ? `\n\n${talentBlock}` : ""
   }\n\nThanks again for your interest in ${input.companyName}.\n\nBest wishes,\n${input.senderName}`;
 }
+
+// Fixed, not editable in MVP (brief §5). Only true because a human tapped
+// the deciding requirement per candidate — never rendered on single-mode
+// emails (see the note at the top of this file).
+export const REVIEWED_LINE =
+  "Your application was individually reviewed by our recruitment team against the requirements for this role.";
+
+export interface TriageEmailInput {
+  candidateFirstName: string;
+  roleTitle: string;
+  companyName: string;
+  warmLine: string;
+  middle: string;
+  closingText: string;
+  talentLine: string;
+  talentLinkUrl: string;
+  talentLinkIncluded: boolean;
+  senderName: string;
+}
+
+// Ported from buildTriageEmail() in kindly-prototype-v4.jsx (brief §6b
+// step 4). CV-stage opening (no stage variants — triage is always at CV
+// stage) plus the reviewed line, which is what makes it honest to state.
+export function buildTriageEmail(input: TriageEmailInput): string {
+  const talentBlock = `${input.talentLine} ${input.talentLinkUrl}`;
+
+  return `Hi ${input.candidateFirstName},\n\nThank you for applying for the ${input.roleTitle} role at ${input.companyName}. ${REVIEWED_LINE} ${input.warmLine}\n\n${input.middle}\n\n${input.closingText}${
+    input.talentLinkIncluded ? `\n\n${talentBlock}` : ""
+  }\n\nThanks again for your interest in ${input.companyName}.\n\nBest wishes,\n${input.senderName}`;
+}

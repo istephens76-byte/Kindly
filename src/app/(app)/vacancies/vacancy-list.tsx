@@ -106,12 +106,20 @@ function VacancyCard({ vacancy }: { vacancy: VacancyRow }) {
         <AddSkillForm vacancyId={vacancy.id} />
       </div>
 
-      <Link
-        href={`/vacancies/${vacancy.id}/generate`}
-        className="mt-3 inline-block text-sm font-semibold text-accent-dark hover:underline"
-      >
-        Write a rejection email →
-      </Link>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        <Link
+          href={`/vacancies/${vacancy.id}/generate`}
+          className="text-sm font-semibold text-accent-dark hover:underline"
+        >
+          Write a rejection email →
+        </Link>
+        <Link
+          href={`/vacancies/${vacancy.id}/triage`}
+          className="text-sm font-semibold text-accent-dark hover:underline"
+        >
+          Triage a batch of CVs →
+        </Link>
+      </div>
     </div>
   );
 }
