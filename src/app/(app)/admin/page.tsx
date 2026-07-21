@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NewTemplateButton } from "./new-template-button";
 import { ProfileForm } from "./profile-form";
 import { ShellEditor } from "./shell-editor";
 import { TaxonomyManager } from "./taxonomy-manager";
@@ -64,7 +65,16 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
-      <h1 className="text-2xl font-bold text-ink">Template Studio</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-ink">Template Studio</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          Set up your company profile, then create your rejection email
+          template.
+        </p>
+        <div className="mt-4">
+          <NewTemplateButton />
+        </div>
+      </div>
 
       <section className="rounded-2xl border border-border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold text-ink">
@@ -82,7 +92,10 @@ export default async function AdminPage() {
         />
       </section>
 
-      <section className="rounded-2xl border border-border bg-white p-6">
+      <section
+        id="shell-section"
+        className="rounded-2xl border border-border bg-white p-6"
+      >
         <h2 className="mb-4 text-lg font-semibold text-ink">
           Rejection email shell
         </h2>

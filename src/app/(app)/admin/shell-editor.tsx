@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
 import type { ShellStatus } from "@/lib/supabase/database.types";
 import {
@@ -8,6 +7,7 @@ import {
   updateShellDraft,
   type ActionState,
 } from "./actions";
+import { useDraftShell } from "./use-draft-shell";
 
 export interface ShellRow {
   id: string;
@@ -24,36 +24,16 @@ export interface ShellRow {
 const REVIEW_NUDGE_DAYS = 182;
 
 function DraftShellButton() {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleClick() {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/draft-shell", { method: "POST" });
-      const body = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(body?.error ?? "Couldn't draft the shell — try again.");
-        return;
-      }
-      router.refresh();
-    } catch {
-      setError("Couldn't draft the shell — try again.");
-    } finally {
-      setPending(false);
-    }
-  }
+  const { draft, pending, error } = useDraftShell();
 
   return (
     <div>
       <button
-        onClick={handleClick}
+        onClick={draft}
         disabled={pending}
         className="rounded-lg bg-amber px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50"
       >
-        {pending ? "Drafting…" : "Draft in our voice"}
+        {pending ? "Drafting…" : "Draft another version in our voice"}
       </button>
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
     </div>
