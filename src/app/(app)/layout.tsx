@@ -60,6 +60,14 @@ export default async function AppLayout({
                 Template Studio
               </Link>
             )}
+            {member.role === "admin" && (
+              <Link
+                href="/admin/insights"
+                className="text-ink-muted hover:text-accent-dark"
+              >
+                Insights
+              </Link>
+            )}
             <Link
               href="/vacancies"
               className="text-ink-muted hover:text-accent-dark"
@@ -77,6 +85,11 @@ export default async function AppLayout({
         </nav>
       </header>
       {children}
+      <footer className="border-t border-border px-4 py-4 text-center text-xs text-ink-muted">
+        <Link href="/privacy" className="hover:text-accent-dark hover:underline">
+          Privacy notice
+        </Link>
+      </footer>
     </div>
   );
 }

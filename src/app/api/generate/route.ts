@@ -19,6 +19,10 @@ import {
   PROMPTS_VERSION,
   type GenerateMiddleAnswers,
 } from "@/lib/prompts";
+import {
+  SINGLE_RATE_LIMIT_PER_MINUTE,
+  singleGenerationsInLastMinute,
+} from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const STAGES = [
@@ -68,6 +72,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "No company found for this account." },
       { status: 403 },
+    );
+  }
+
+  const recentCount = await singleGenerationsInLastMinute(supabase, user.id);
+  if (recentCount >= SINGLE_RATE_LIMIT_PER_MINUTE) {
+    return NextResponse.json(
+      { error: "Too many emails written in the last minute — wait a moment and try again." },
+      { status: 429 },
     );
   }
 

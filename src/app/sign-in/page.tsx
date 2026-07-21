@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -67,6 +68,13 @@ export default function SignInPage() {
             )}
           </form>
         )}
+
+        <Link
+          href="/privacy"
+          className="mt-6 block text-xs text-ink-muted hover:text-accent-dark hover:underline"
+        >
+          Privacy notice
+        </Link>
       </div>
     </main>
   );
