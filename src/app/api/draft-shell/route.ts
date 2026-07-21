@@ -22,13 +22,19 @@ async function nextVersionFor(
 }
 
 // Brief §6c: drafts the five fixed shell lines from the company's saved
-// profile. Overwrites the company's existing in-progress draft (if any) in
-// place rather than inserting a new version each time — re-rolling "Draft
-// in our voice" several times while iterating shouldn't leave a trail of
-// permanent, never-activated versions. A version only becomes permanent
-// once it's activated (see activate_shell). Takes no request body — the
-// profile is loaded server-side, never trusted from the client (same
-// principle as the other routes in §6).
+// profile. Every call starts a genuinely fresh draft: any existing
+// draft-status row(s) are first demoted to 'superseded' (never deleted —
+// shells have no DELETE policy, see the RLS migration) rather than
+// looked up and updated in place. An earlier version tried to find "the"
+// existing draft via .maybeSingle() and update it, but that lookup
+// silently broke once more than one draft-status row existed (it errors
+// on >1 match, and the error went unchecked, so it fell through to
+// inserting yet another version) — demoting unconditionally has no such
+// ambiguity and is also self-healing against any leftover duplicates. A
+// version only becomes permanent once it's activated (see
+// activate_shell). Takes no request body — the profile is loaded
+// server-side, never trusted from the client (same principle as the
+// other routes in §6).
 export async function POST() {
   const supabase = await createClient();
   const {
@@ -125,31 +131,30 @@ export async function POST() {
     );
   }
 
-  const { data: existingDraft } = await supabase
+  const { error: supersedeError } = await supabase
     .from("shells")
-    .select("id")
+    .update({ status: "superseded" })
     .eq("company_id", member.company_id)
-    .eq("status", "draft")
-    .maybeSingle();
+    .eq("status", "draft");
 
-  const { data: shell, error: shellError } = existingDraft
-    ? await supabase
-        .from("shells")
-        .update({ ...parsed.data, created_by: user.id })
-        .eq("id", existingDraft.id)
-        .select()
-        .single()
-    : await supabase
-        .from("shells")
-        .insert({
-          company_id: member.company_id,
-          version: await nextVersionFor(supabase, member.company_id),
-          ...parsed.data,
-          status: "draft",
-          created_by: user.id,
-        })
-        .select()
-        .single();
+  if (supersedeError) {
+    return NextResponse.json(
+      { error: "Couldn't save the draft — try again." },
+      { status: 500 },
+    );
+  }
+
+  const { data: shell, error: shellError } = await supabase
+    .from("shells")
+    .insert({
+      company_id: member.company_id,
+      version: await nextVersionFor(supabase, member.company_id),
+      ...parsed.data,
+      status: "draft",
+      created_by: user.id,
+    })
+    .select()
+    .single();
 
   if (shellError || !shell) {
     return NextResponse.json(
