@@ -82,3 +82,31 @@ export async function removeSkill(skillId: string): Promise<ActionState> {
   revalidatePath("/vacancies");
   return { success: true };
 }
+
+// Vacancies are never deleted (no delete policy — see the RLS migration),
+// so closing one out just archives it: tucked into the collapsed group in
+// the UI, still fully accessible and reversible, and still valid for any
+// generations that reference it.
+export async function setVacancyArchived(
+  vacancyId: string,
+  archived: boolean,
+): Promise<ActionState> {
+  const auth = await requireMembership();
+  if ("error" in auth) return { error: auth.error };
+
+  const { error } = await auth.supabase
+    .from("vacancies")
+    .update({ archived })
+    .eq("id", vacancyId);
+
+  if (error) {
+    return {
+      error: archived
+        ? "Couldn't archive this vacancy — try again."
+        : "Couldn't restore this vacancy — try again.",
+    };
+  }
+
+  revalidatePath("/vacancies");
+  return { success: true };
+}
