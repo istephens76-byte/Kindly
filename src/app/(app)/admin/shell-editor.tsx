@@ -177,10 +177,25 @@ function ShellVersionHeader({ shell }: { shell: ShellRow }) {
   );
 }
 
+const READ_ONLY_LINES: { label: string; field: keyof ShellRow }[] = [
+  { label: "Warm line", field: "warm_line" },
+  { label: "Closing — actively encourage reapplying", field: "closing_active" },
+  { label: "Closing — door open, other roles", field: "closing_other" },
+  { label: "Closing — not right now", field: "closing_no" },
+  { label: "Talent link invitation", field: "talent_line" },
+];
+
 function ReadOnlyShellSummary({ shell }: { shell: ShellRow }) {
   return (
-    <div className="rounded-xl border border-border p-4 text-sm text-ink-muted">
-      <p>{shell.warm_line}</p>
+    <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
+      {READ_ONLY_LINES.map(({ label, field }) => (
+        <div key={field}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            {label}
+          </p>
+          <p className="mt-1 text-sm text-ink">{shell[field]}</p>
+        </div>
+      ))}
     </div>
   );
 }
