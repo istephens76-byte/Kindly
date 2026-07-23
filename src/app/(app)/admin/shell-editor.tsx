@@ -200,6 +200,35 @@ function ReadOnlyShellSummary({ shell }: { shell: ShellRow }) {
   );
 }
 
+function ReactivateShellButton({ shellId }: { shellId: string }) {
+  const [activating, startActivating] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleClick() {
+    setError(null);
+    startActivating(async () => {
+      const result = await activateShell(shellId);
+      if (result.error) {
+        setError(result.error);
+      }
+    });
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={activating}
+        className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-ink-muted hover:border-accent disabled:opacity-50"
+      >
+        {activating ? "Activating…" : "Reactivate this version"}
+      </button>
+      {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
+    </div>
+  );
+}
+
 function reviewNudge(activeShell: ShellRow | undefined): string | null {
   if (!activeShell) return null;
   const daysSince =
@@ -261,6 +290,7 @@ export function ShellEditor({ shells }: { shells: ShellRow[] }) {
               <div key={shell.id}>
                 <ShellVersionHeader shell={shell} />
                 <ReadOnlyShellSummary shell={shell} />
+                <ReactivateShellButton shellId={shell.id} />
               </div>
             ))}
           </div>
